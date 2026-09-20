@@ -770,7 +770,7 @@ function fitStage() {
   const stage = document.querySelector('.stage');
   const availW = stage.clientWidth - 24, availH = stage.clientHeight - 40;
   // device-like width that grows with the viewport, so the rich profile fills the space
-  const w = Math.max(360, Math.min(availW - 8, availH * 0.82, 900));
+  const w = Math.max(420, Math.min(availW - 8, availH * 0.94, 1100));
   phone.style.width = Math.floor(w) + 'px';
   stageTile = 0; grid.style.width = '';   // grid fills the phone via 1fr; dims() reads clientWidth
 }
