@@ -272,7 +272,18 @@
   .tools button.span-btn:hover { border-color: #e0a020; color: #ffc24d; }
 
   .hint { margin-top: 10px; font-size: 11px; color: #8a8a8f; text-align: center; line-height: 1.7; }
-  .rail { width: clamp(280px, 19vw, 360px); flex-shrink: 0; background: var(--surface); border-left: 1px solid var(--border); overflow-y: auto; padding: 22px 18px; display: flex; flex-direction: column; gap: 28px; }
+  .rail { width: clamp(280px, 19vw, 360px); flex-shrink: 0; background: var(--surface); border-left: 1px solid var(--border); overflow-y: auto; padding: 16px 18px 22px; display: flex; flex-direction: column; gap: 28px; }
+  .rail-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .rail-toggle,.rail-open { background:var(--elevated); border:1px solid var(--border); color:var(--text-dim); border-radius:999px; cursor:pointer; font:inherit; font-size:10px; letter-spacing:.6px; padding:7px 10px; }
+  .rail-toggle:hover,.rail-open:hover { color:var(--text); border-color:var(--border-bright); }
+  .rail-open { display:none; position:absolute; top:16px; right:16px; z-index:20; background:var(--surface); box-shadow:0 4px 18px rgba(0,0,0,.12); }
+  .main { position:relative; }
+  .main.rail-collapsed .rail { display:none; }
+  .main.rail-collapsed .rail-open { display:block; }
+  #zoomBlock { display:none; padding:13px; background:var(--elevated); border:1px solid var(--border); border-radius:12px; }
+  #zoomBlock.is-active { display:block; }
+  .crop-note { font-size:11px; color:var(--text-dim); line-height:1.5; margin-top:10px; }
+  .crop-actions { display:flex; justify-content:flex-end; margin-top:10px; }
   .rail-h { font-size: 10px; letter-spacing: 2px; color: var(--accent); margin-bottom: 14px; }
   .rail .zoom { display: flex; align-items: center; gap: 10px; }
   .rail .zoom input[type=range] { flex: 1; width: auto; }
@@ -448,7 +459,7 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-
 .header{background:rgba(255,255,255,.82);backdrop-filter:blur(18px);border-bottom-color:var(--border);}
 .logo{font-size:20px;font-weight:700;letter-spacing:-.7px;gap:7px}.logo svg{display:none}.gm-mark{color:var(--accent);font-size:18px}.logo .cur{display:none}
 .seg{border-radius:999px;background:#f5f5f7}.seg button{border-radius:999px;color:var(--text-dim)}.seg button.active,.btn-accent{background:var(--text);border-color:var(--text);color:#fff}.btn-accent:hover:not(:disabled){background:#3a3a3c}.btn{border-radius:999px;background:#fff;color:var(--text)}
-.shell{background:linear-gradient(180deg,#f7f7f9 0%,#eeeeF1 100%);padding-top:24px}.main{border:1px solid var(--border);border-top:1px solid var(--border);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.09);overflow:hidden}.sidebar,.rail,.phone{background:var(--surface)}.stage{background:#f7f7f9;background-image:radial-gradient(#d1d1d6 .7px,transparent .7px);background-size:16px 16px}.phone{border-color:var(--border);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.08)}.dropzone{background:#fbfbfd;border-color:#c7c7cc;border-radius:12px}.dropzone.over{border-color:var(--accent);background:#fff6f3}.dropzone strong,.rail-cat,.hl-toggle.on{color:var(--accent)}.chip{border-left-color:var(--accent);border-radius:9px;background:#f7f7f9}.cell.assign-target{outline-color:var(--accent)!important}.avatar{background:#f2f2f4;border-color:var(--accent)}.site-footer{background:var(--bg);color:var(--text-dim)}.gm-attribution{font-size:11px;color:var(--text-dim);margin-top:12px}.gm-attribution a{color:var(--accent)}.footer{background:#1d1d1f;color:#f5f5f7}.sb-brand{font-weight:700}
+.shell{background:linear-gradient(180deg,#f7f7f9 0%,#eeeeF1 100%);padding-top:24px}.main{border:1px solid var(--border);border-top:1px solid var(--border);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.09);overflow:hidden}.sidebar,.rail,.phone{background:var(--surface)}.stage{background:#f7f7f9;background-image:radial-gradient(#d1d1d6 .7px,transparent .7px);background-size:16px 16px}.phone{border-color:var(--border);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.08)}.dropzone{background:#fbfbfd;border-color:#c7c7cc;border-radius:12px}.dropzone.over{border-color:var(--accent);background:#fff6f3}.dropzone strong,.rail-cat,.hl-toggle.on{color:var(--accent)}.chip{border-left-color:var(--accent);border-radius:9px;background:#f7f7f9}.cell.assign-target{outline-color:var(--accent)!important}.avatar{background:#f2f2f4;border-color:var(--accent)}.site-footer{background:var(--bg);color:var(--text-dim)}.gm-attribution{font-size:11px;color:var(--text-dim);margin-top:12px}.gm-attribution a{color:var(--accent)}.footer{background:#1d1d1f;color:#f5f5f7}.sb-brand{font-weight:700}@media(max-width:820px){#zoomBlock.is-active{display:block}}
 </style>
 </head>
 <body>
@@ -540,9 +551,10 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-
       <input type="file" id="hlInput" accept="image/*" hidden>
 
     </div>
-    <aside class="rail">
+    <aside class="rail" aria-label="Guide and photo controls">
+      <div class="rail-top"><span class="rail-h" style="margin:0">GUIDE</span><button type="button" class="rail-toggle" id="railToggle" aria-expanded="true">HIDE GUIDE</button></div>
       <div class="rail-block" id="zoomBlock">
-        <div class="rail-h">ZOOM</div>
+        <div class="rail-h">CROP PHOTO</div>
         <div class="zoom">
           <span>OUT</span>
           <input type="range" id="zoomRange" min="0" max="500" value="100" disabled>
@@ -551,6 +563,8 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-
         <div id="zoomVal" style="font-size:11px;color:var(--text-dim);text-align:center;margin-top:4px;letter-spacing:.5px;">
           <span id="zoomPct" contenteditable="false" title="Click to enter exact zoom %" style="cursor:default;border-radius:3px;padding:1px 4px;outline:none;min-width:36px;display:inline-block;text-align:center;">—</span>
         </div>
+        <p class="crop-note">Drag inside the selected photo to reposition it. Use this slider, the mouse wheel, or pinch to zoom.</p>
+        <div class="crop-actions"><button type="button" class="btn" id="resetCropBtn">RESET CROP</button></div>
       </div>
       <div class="rail-block rail-help">
         <div class="rail-cat rail-cat-first">TIPS</div>
@@ -572,6 +586,7 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-
         <details><summary>Is it open source?</summary><p>Yes — one readable file. <a href="https://github.com/chrisvrakas/mkgrid" target="_blank" rel="noopener">Read or fork it on GitHub ↗</a></p></details>
       </div>
     </aside>
+    <button type="button" class="rail-open" id="railOpen" aria-label="Show guide and photo controls">☰ GUIDE</button>
     <!-- Mobile export bar — export button only -->
     <div id="mobileBar">
       <div id="assignHint" style="display:none;">tap a photo above to place it</div>
@@ -661,6 +676,7 @@ let stageTile = 0;
 
 const grid = $('grid'), tray = $('tray'), fileInput = $('fileInput'), dropzone = $('dropzone');
 const zoomRange = $('zoomRange'), undoBtn = $('undoBtn'), redoBtn = $('redoBtn');
+const mainEl = document.querySelector('.main'), railToggle = $('railToggle'), railOpen = $('railOpen'), zoomBlock = $('zoomBlock');
 const exportModal = $('exportModal'), preview = $('preview'), canvas = $('canvas');
 const ghost = $('ghost'), ghostImg = ghost.querySelector('img');
 
@@ -1214,6 +1230,7 @@ function renderTray() {
 /* ---------- zoom ui ---------- */
 function syncZoom() {
   const t = active != null ? tiles[active] : null; const on = !!t;
+  zoomBlock.classList.toggle('is-active', on);
   zoomRange.disabled = !on;
   const pct = on ? Math.round((t.banner ? (t.bz == null ? 1 : t.bz) : (t.z == null ? 1 : t.z)) * 100) : 100;
   zoomRange.value = pct; zoomRange.setAttribute('aria-valuenow', pct); zoomRange.setAttribute('aria-valuetext', on ? pct + '%' : 'inactive');
@@ -1234,6 +1251,23 @@ function syncZoom() {
     mp.style.background = mobEdit ? 'rgba(255,255,255,.06)' : 'transparent';
   }
 }
+
+function setRailCollapsed(collapsed) {
+  mainEl.classList.toggle('rail-collapsed', collapsed);
+  railToggle.setAttribute('aria-expanded', String(!collapsed));
+  railToggle.textContent = collapsed ? 'SHOW GUIDE' : 'HIDE GUIDE';
+  try { localStorage.setItem('gridmuse-guide-collapsed', collapsed ? '1' : '0'); } catch (_) {}
+}
+railToggle.addEventListener('click', () => setRailCollapsed(!mainEl.classList.contains('rail-collapsed')));
+railOpen.addEventListener('click', () => setRailCollapsed(false));
+try { setRailCollapsed(localStorage.getItem('gridmuse-guide-collapsed') === '1'); } catch (_) { setRailCollapsed(false); }
+$('resetCropBtn').addEventListener('click', () => {
+  if (active == null || !tiles[active]) return;
+  const tile = tiles[active];
+  if (tile.banner) { tile.bz = 1; tile.panX = 0; tile.panY = 0; }
+  else { tile.z = 1; tile.panX = 0; tile.panY = 0; }
+  render(); syncZoom(); commit();
+});
 
 (function wireZoomInput() {
   const PCT_IDS = ['zoomPct', 'zoomPctMob'];
