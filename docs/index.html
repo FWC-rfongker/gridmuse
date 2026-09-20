@@ -484,6 +484,7 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-
         <button data-rows="6">3×6</button>
         <button data-rows="9">3×9</button>
       </div>
+      <button id="addRowBtn" class="btn" title="Add one row (3 tiles)">＋ 3 TILES</button>
       <button id="undoBtn" class="btn btn-icon" title="Undo">↩</button>
       <button id="redoBtn" class="btn btn-icon" title="Redo">↪</button>
       <button id="clearBtn" class="btn">CLEAR</button>
@@ -1640,6 +1641,10 @@ $('showOrder').addEventListener('change', showFeedPreview);
 exportModal.addEventListener('click', e => { if (e.target === exportModal) closeExport(); });
 undoBtn.addEventListener('click', undo); redoBtn.addEventListener('click', redo);
 $('rowsSeg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { $('rowsSeg').querySelectorAll('button').forEach(x => x.classList.remove('active')); b.classList.add('active'); setRows(parseInt(b.dataset.rows)); }));
+$('addRowBtn').addEventListener('click', () => {
+  $('rowsSeg').querySelectorAll('button').forEach(x => x.classList.remove('active'));
+  setRows(rows + 1);
+});
 $('ratioSeg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { $('ratioSeg').querySelectorAll('button').forEach(x => x.classList.remove('active')); b.classList.add('active'); setRatio(parseInt(b.dataset.rw), parseInt(b.dataset.rh)); }));
 window.addEventListener('keydown', e => {
   const m = e.ctrlKey || e.metaKey;
