@@ -155,11 +155,11 @@
   .dropzone strong { color: var(--accent); display: block; font-size: 13px; letter-spacing: .3px; }
   .dropzone span { font-size: 10px; color: var(--text-dim); display: block; margin-top: 7px; }
 
-  .tray { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 7px; }
+  .tray { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 7px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
   .tray-empty { color: #4a4a4d; text-align: center; padding: 20px 0; font-size: 11px; }
   .chip {
     background: var(--elevated); border-left: 3px solid var(--accent); border-radius: 0 5px 5px 0;
-    display: flex; align-items: center; gap: 10px; padding: 7px 9px; cursor: grab; touch-action: none; user-select: none;
+    display: flex; align-items: center; gap: 10px; padding: 7px 9px; cursor: grab; touch-action: pan-y; user-select: none;
   }
   .chip.dragging { opacity: .3; }
   .chip img { width: 42px; height: 42px; object-fit: cover; border-radius: 3px; flex-shrink: 0; pointer-events: none; background: #2a2a2c; }
@@ -770,7 +770,7 @@ function fitStage() {
   const stage = document.querySelector('.stage');
   const availW = stage.clientWidth - 24, availH = stage.clientHeight - 40;
   // device-like width that grows with the viewport, so the rich profile fills the space
-  const w = Math.max(420, Math.min(availW - 8, availH * 0.94, 1100));
+  const w = Math.max(480, Math.min(availW - 8, availH * 1.12, 1250));
   phone.style.width = Math.floor(w) + 'px';
   stageTile = 0; grid.style.width = '';   // grid fills the phone via 1fr; dims() reads clientWidth
 }
@@ -1092,6 +1092,10 @@ function wireChip(el, a) {
       if (next >= 0 && lib.length > 1) enterAssign(next);
       return;
     }
+    // On touch, preserve native vertical scrolling in the photo library. Dragging
+    // from the library remains a desktop mouse interaction; touch users assign a
+    // selected image directly to a highlighted cell instead.
+    if (e.pointerType !== 'mouse') return;
     e.preventDefault();
     drag = { kind: 'tray', id: e.pointerId, imgId: a.id };
     showGhost(displaySrc(a)); moveGhost(e.clientX, e.clientY); el.classList.add('dragging');
