@@ -277,9 +277,16 @@
   .rail-toggle,.rail-open { background:var(--elevated); border:1px solid var(--border); color:var(--text-dim); border-radius:999px; cursor:pointer; font:inherit; font-size:10px; letter-spacing:.6px; padding:7px 10px; }
   .rail-toggle:hover,.rail-open:hover { color:var(--text); border-color:var(--border-bright); }
   .rail-open { display:none; position:absolute; top:16px; right:16px; z-index:20; background:var(--surface); box-shadow:0 4px 18px rgba(0,0,0,.12); }
+  .library-top { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:0 16px; margin-top:14px; }
+  .library-title { color:var(--text-dim); font-size:10px; font-weight:700; letter-spacing:1.5px; }
+  .library-toggle,.library-open { background:var(--elevated); border:1px solid var(--border); color:var(--text-dim); border-radius:999px; cursor:pointer; font:inherit; font-size:10px; letter-spacing:.6px; padding:7px 10px; }
+  .library-toggle:hover,.library-open:hover { color:var(--text); border-color:var(--border-bright); }
+  .library-open { display:none; position:absolute; top:16px; left:16px; z-index:20; background:var(--surface); box-shadow:0 4px 18px rgba(0,0,0,.12); }
   .main { position:relative; }
   .main.rail-collapsed .rail { display:none; }
   .main.rail-collapsed .rail-open { display:block; }
+  .main.library-collapsed .sidebar { display:none; }
+  .main.library-collapsed .library-open { display:block; }
   #zoomBlock { display:none; padding:13px; background:var(--elevated); border:1px solid var(--border); border-radius:12px; }
   #zoomBlock.is-active { display:block; }
   .crop-note { font-size:11px; color:var(--text-dim); line-height:1.5; margin-top:10px; }
@@ -504,6 +511,7 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-
   <div class="shell">
   <div class="main">
     <div class="sidebar">
+      <div class="library-top"><span class="library-title">PHOTO LIBRARY</span><button type="button" class="library-toggle" id="libraryToggle" aria-expanded="true">HIDE PHOTOS</button></div>
       <div class="dropzone" id="dropzone">
         <strong>+ ADD PHOTOS</strong>
         <span>tap or drag · stays on your device</span>
@@ -587,6 +595,7 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-
         <details><summary>Is it open source?</summary><p>Yes — one readable file. <a href="https://github.com/chrisvrakas/mkgrid" target="_blank" rel="noopener">Read or fork it on GitHub ↗</a></p></details>
       </div>
     </aside>
+    <button type="button" class="library-open" id="libraryOpen" aria-label="Show photo library">☰ PHOTOS</button>
     <button type="button" class="rail-open" id="railOpen" aria-label="Show guide and photo controls">☰ GUIDE</button>
     <!-- Mobile export bar — export button only -->
     <div id="mobileBar">
@@ -678,6 +687,7 @@ let stageTile = 0;
 const grid = $('grid'), tray = $('tray'), fileInput = $('fileInput'), dropzone = $('dropzone');
 const zoomRange = $('zoomRange'), undoBtn = $('undoBtn'), redoBtn = $('redoBtn');
 const mainEl = document.querySelector('.main'), railToggle = $('railToggle'), railOpen = $('railOpen'), zoomBlock = $('zoomBlock');
+const libraryToggle = $('libraryToggle'), libraryOpen = $('libraryOpen');
 const exportModal = $('exportModal'), preview = $('preview'), canvas = $('canvas');
 const ghost = $('ghost'), ghostImg = ghost.querySelector('img');
 
@@ -1079,6 +1089,14 @@ function wireGrip(grip, i) {
   grip.addEventListener('pointerup', fin); grip.addEventListener('pointercancel', fin);
 }
 function wireChip(el, a) {
+  let holdTimer = null, touchStart = null;
+  const clearHold = () => { if (holdTimer) clearTimeout(holdTimer); holdTimer = null; touchStart = null; };
+  const beginDrag = e => {
+    drag = { kind: 'tray', id: e.pointerId, imgId: a.id };
+    showGhost(displaySrc(a)); moveGhost(e.clientX, e.clientY); el.classList.add('dragging');
+    document.body.style.overflow = 'hidden'; document.body.style.touchAction = 'none';
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+  };
   el.addEventListener('pointerdown', e => {
     if (e.target.closest('.del')) return;
     // tap-to-assign: if a cell is waiting, assign immediately without drag
@@ -1092,18 +1110,26 @@ function wireChip(el, a) {
       if (next >= 0 && lib.length > 1) enterAssign(next);
       return;
     }
-    // On touch, preserve native vertical scrolling in the photo library. Dragging
-    // from the library remains a desktop mouse interaction; touch users assign a
-    // selected image directly to a highlighted cell instead.
-    if (e.pointerType !== 'mouse') return;
+    // Let ordinary touch movement scroll the library. A deliberate hold turns
+    // into a drag, so touch users can still place a photo on the grid.
+    if (e.pointerType !== 'mouse') {
+      touchStart = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      holdTimer = setTimeout(() => {
+        if (!touchStart || touchStart.id !== e.pointerId) return;
+        beginDrag(e); clearHold();
+      }, 420);
+      return;
+    }
     e.preventDefault();
-    drag = { kind: 'tray', id: e.pointerId, imgId: a.id };
-    showGhost(displaySrc(a)); moveGhost(e.clientX, e.clientY); el.classList.add('dragging');
-    document.body.style.overflow = 'hidden'; document.body.style.touchAction = 'none';
-    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+    beginDrag(e);
   });
-  el.addEventListener('pointermove', e => { if (!drag || drag.id !== e.pointerId) return; e.preventDefault(); moveGhost(e.clientX, e.clientY); hintDrop(cellAt(e.clientX, e.clientY)); });
+  el.addEventListener('pointermove', e => {
+    if (touchStart && touchStart.id === e.pointerId && Math.hypot(e.clientX - touchStart.x, e.clientY - touchStart.y) > 9) clearHold();
+    if (!drag || drag.id !== e.pointerId) return;
+    e.preventDefault(); moveGhost(e.clientX, e.clientY); hintDrop(cellAt(e.clientX, e.clientY));
+  });
   const fin = e => {
+    clearHold();
     if (!drag || drag.id !== e.pointerId) return;
     const tgt = cellAt(e.clientX, e.clientY);
     ghost.style.display = 'none'; clearDrop(); el.classList.remove('dragging');
@@ -1266,6 +1292,15 @@ function setRailCollapsed(collapsed) {
 railToggle.addEventListener('click', () => setRailCollapsed(!mainEl.classList.contains('rail-collapsed')));
 railOpen.addEventListener('click', () => setRailCollapsed(false));
 try { setRailCollapsed(localStorage.getItem('gridmuse-guide-collapsed') === '1'); } catch (_) { setRailCollapsed(false); }
+function setLibraryCollapsed(collapsed) {
+  mainEl.classList.toggle('library-collapsed', collapsed);
+  libraryToggle.setAttribute('aria-expanded', String(!collapsed));
+  libraryToggle.textContent = collapsed ? 'SHOW PHOTOS' : 'HIDE PHOTOS';
+  try { localStorage.setItem('gridmuse-library-collapsed', collapsed ? '1' : '0'); } catch (_) {}
+}
+libraryToggle.addEventListener('click', () => setLibraryCollapsed(!mainEl.classList.contains('library-collapsed')));
+libraryOpen.addEventListener('click', () => setLibraryCollapsed(false));
+try { setLibraryCollapsed(localStorage.getItem('gridmuse-library-collapsed') === '1'); } catch (_) { setLibraryCollapsed(false); }
 $('resetCropBtn').addEventListener('click', () => {
   if (active == null || !tiles[active]) return;
   const tile = tiles[active];
