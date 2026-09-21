@@ -1091,9 +1091,21 @@ function wireGrip(grip, i) {
   grip.addEventListener('pointerup', fin); grip.addEventListener('pointercancel', fin);
 }
 function wireChip(el, a) {
-  let holdTimer = null, touchStart = null;
+  let holdTimer = null, touchStart = null, momentumFrame = 0;
   const stopHold = () => { if (holdTimer) clearTimeout(holdTimer); holdTimer = null; };
   const clearTouch = () => { stopHold(); touchStart = null; };
+  const stopMomentum = () => { if (momentumFrame) cancelAnimationFrame(momentumFrame); momentumFrame = 0; };
+  const continueScroll = (tray, velocity) => {
+    if (!tray || Math.abs(velocity) < .025) return;
+    const step = () => {
+      const before = tray.scrollTop;
+      tray.scrollTop += velocity * 16;
+      velocity *= .92;
+      if (Math.abs(velocity) >= .025 && Math.abs(tray.scrollTop - before) > .05) momentumFrame = requestAnimationFrame(step);
+      else momentumFrame = 0;
+    };
+    momentumFrame = requestAnimationFrame(step);
+  };
   const beginDrag = e => {
     drag = { kind: 'tray', id: e.pointerId, imgId: a.id };
     showGhost(displaySrc(a)); moveGhost(e.clientX, e.clientY); el.classList.add('dragging');
@@ -1126,8 +1138,10 @@ function wireChip(el, a) {
       // Own this gesture from the start. Safari otherwise cancels a long-press
       // drag when it decides the touch is a page/library scroll.
       e.preventDefault();
+      stopMomentum();
       const tray = el.closest('.tray');
-      touchStart = { id: e.pointerId, x: e.clientX, y: e.clientY, tray, scrollTop: tray ? tray.scrollTop : 0 };
+      const now = performance.now();
+      touchStart = { id: e.pointerId, x: e.clientX, y: e.clientY, lastY: e.clientY, lastTime: now, tray, moved: false, velocity: 0 };
       try { el.setPointerCapture(e.pointerId); } catch (_) {}
       holdTimer = setTimeout(() => {
         if (!touchStart || touchStart.id !== e.pointerId) return;
@@ -1143,7 +1157,12 @@ function wireChip(el, a) {
       const distance = Math.hypot(e.clientX - touchStart.x, e.clientY - touchStart.y);
       if (distance > 9) {
         stopHold();
-        if (touchStart.tray) touchStart.tray.scrollTop = touchStart.scrollTop - (e.clientY - touchStart.y);
+        const now = performance.now();
+        const deltaY = e.clientY - touchStart.lastY;
+        const elapsed = Math.max(1, now - touchStart.lastTime);
+        if (touchStart.tray) touchStart.tray.scrollTop -= deltaY;
+        touchStart.velocity = (-deltaY / elapsed) * .65;
+        touchStart.lastY = e.clientY; touchStart.lastTime = now; touchStart.moved = true;
         e.preventDefault();
         return;
       }
@@ -1153,8 +1172,12 @@ function wireChip(el, a) {
   });
   const fin = e => {
     const dragging = drag && drag.id === e.pointerId;
+    const touch = touchStart;
     clearTouch();
-    if (!dragging) return;
+    if (!dragging) {
+      if (touch && touch.moved) continueScroll(touch.tray, touch.velocity);
+      return;
+    }
     const tgt = cellAt(e.clientX, e.clientY);
     ghost.style.display = 'none'; clearDrop(); el.classList.remove('dragging');
     document.body.style.overflow = ''; document.body.style.touchAction = '';
