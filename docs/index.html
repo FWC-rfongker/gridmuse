@@ -159,7 +159,7 @@
   .tray-empty { color: #4a4a4d; text-align: center; padding: 20px 0; font-size: 11px; }
   .chip {
     background: var(--elevated); border-left: 3px solid var(--accent); border-radius: 0 5px 5px 0;
-    display: flex; align-items: center; gap: 10px; padding: 7px 9px; cursor: grab; touch-action: pan-y; user-select: none;
+    display: flex; align-items: center; gap: 10px; padding: 7px 9px; cursor: grab; touch-action: none; user-select: none;
     -webkit-user-select: none; -webkit-touch-callout: none; -webkit-user-drag: none;
   }
   .chip, .chip * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-user-drag: none; }
@@ -1092,7 +1092,8 @@ function wireGrip(grip, i) {
 }
 function wireChip(el, a) {
   let holdTimer = null, touchStart = null;
-  const clearHold = () => { if (holdTimer) clearTimeout(holdTimer); holdTimer = null; touchStart = null; };
+  const stopHold = () => { if (holdTimer) clearTimeout(holdTimer); holdTimer = null; };
+  const clearTouch = () => { stopHold(); touchStart = null; };
   const beginDrag = e => {
     drag = { kind: 'tray', id: e.pointerId, imgId: a.id };
     showGhost(displaySrc(a)); moveGhost(e.clientX, e.clientY); el.classList.add('dragging');
@@ -1122,10 +1123,15 @@ function wireChip(el, a) {
     // Let ordinary touch movement scroll the library. A deliberate hold turns
     // into a drag, so touch users can still place a photo on the grid.
     if (e.pointerType !== 'mouse') {
-      touchStart = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      // Own this gesture from the start. Safari otherwise cancels a long-press
+      // drag when it decides the touch is a page/library scroll.
+      e.preventDefault();
+      const tray = el.closest('.tray');
+      touchStart = { id: e.pointerId, x: e.clientX, y: e.clientY, tray, scrollTop: tray ? tray.scrollTop : 0 };
+      try { el.setPointerCapture(e.pointerId); } catch (_) {}
       holdTimer = setTimeout(() => {
         if (!touchStart || touchStart.id !== e.pointerId) return;
-        beginDrag(e); clearHold();
+        beginDrag(e); stopHold(); touchStart = null;
       }, 420);
       return;
     }
@@ -1133,13 +1139,22 @@ function wireChip(el, a) {
     beginDrag(e);
   });
   el.addEventListener('pointermove', e => {
-    if (touchStart && touchStart.id === e.pointerId && Math.hypot(e.clientX - touchStart.x, e.clientY - touchStart.y) > 9) clearHold();
+    if (touchStart && touchStart.id === e.pointerId) {
+      const distance = Math.hypot(e.clientX - touchStart.x, e.clientY - touchStart.y);
+      if (distance > 9) {
+        stopHold();
+        if (touchStart.tray) touchStart.tray.scrollTop = touchStart.scrollTop - (e.clientY - touchStart.y);
+        e.preventDefault();
+        return;
+      }
+    }
     if (!drag || drag.id !== e.pointerId) return;
     e.preventDefault(); moveGhost(e.clientX, e.clientY); hintDrop(cellAt(e.clientX, e.clientY));
   });
   const fin = e => {
-    clearHold();
-    if (!drag || drag.id !== e.pointerId) return;
+    const dragging = drag && drag.id === e.pointerId;
+    clearTouch();
+    if (!dragging) return;
     const tgt = cellAt(e.clientX, e.clientY);
     ghost.style.display = 'none'; clearDrop(); el.classList.remove('dragging');
     document.body.style.overflow = ''; document.body.style.touchAction = '';
