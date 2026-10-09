@@ -6,5 +6,5 @@
 <style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#09090b;color:#f5f5f7;font:16px system-ui}p{opacity:.65}</style>
 <p>กำลังเปิด Vinyl Room…</p>
 <script>
-(async()=>{try{const e=await(await fetch("app.gz.b64?v=dae71a896d611418509e5962cdc11b4680e38dfa")).text(),b=Uint8Array.from(atob(e.replace(/\s/g,"")),c=>c.charCodeAt(0));let h;if(typeof DecompressionStream=="function"){const s=new Blob([b]).stream().pipeThrough(new DecompressionStream("gzip"));h=await new Response(s).text()}else{await new Promise((ok,no)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js";s.onload=ok;s.onerror=no;document.head.appendChild(s)});h=pako.ungzip(b,{to:"string"})}document.open();document.write(h);document.close()}catch(x){document.body.innerHTML="<p>เปิด Vinyl Room ไม่สำเร็จ กรุณารีเฟรชหน้าอีกครั้ง</p>"}})();
+(async()=>{try{const p=["app-00.html?v=20261010","app-01.html?v=20261010","app-02.html?v=20261010","app-03.html?v=20261010","app-04.html?v=20261010","app-05.html?v=20261010","app-06.html?v=20261010"],h=(await Promise.all(p.map(u=>fetch(u).then(r=>{if(!r.ok)throw Error(r.status);return r.text()})))).join("");document.open();document.write(h);document.close()}catch(x){document.body.innerHTML="<p>เปิด Vinyl Room ไม่สำเร็จ กรุณารีเฟรชหน้าอีกครั้ง</p>"}})();
 </script>
