@@ -1,0 +1,47 @@
+lder="วาง YouTube API key" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="-webkit-text-security:disc"><button type="button" id="ksave">บันทึก</button></div><a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">วิธีรับ API key (YouTube Data API v3)</a><a class="ytlogin" href="https://www.youtube.com/account" target="_blank" rel="noopener">ลงชื่อเข้าใช้ YouTube</a></div>
+<div id="sf" class="row" style="margin-top:12px"><input id="q" placeholder="ชื่อเพลงหรือศิลปิน" autocomplete="off" autocapitalize="off" autocorrect="off" enterkeyhint="search"><button type="button" id="sgo">ค้นหา</button></div>
+<div id="msg"></div><div id="res"></div><h3>อัลบั้มของฉัน</h3><div id="qd"></div></aside>
+<div class="stage">
+  <div class="sleeve" id="sleeve"></div>
+  <div class="disc"><div class="spin" id="spin" data-tex="swirl"><i class="ring"></i><i class="gr"></i><div class="label" id="label"><div id="lart"></div><div class="yw"><div id="ytp"></div></div></div><i class="hole"></i></div></div>
+  <button class="base" id="base" aria-label="เล่น/หยุด"></button>
+  <div class="arm" id="arm"><b class="bar"></b><b class="head"></b><b class="cw"></b></div>
+</div>
+<div class="meta" id="meta"><h1 id="t">-</h1><p id="a">-</p></div>
+<div class="prog"><span id="cur">00:00</span><div class="pbar" id="pbar"><i id="pg"></i></div><span id="dur">00:48</span></div>
+<div class="ctrl">
+  <button id="prev" aria-label="เพลงก่อนหน้า"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zM20 6v12L9.5 12z"/></svg></button>
+  <button class="big" id="play" aria-label="เล่น/หยุด"></button>
+  <button id="next" aria-label="เพลงถัดไป"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM4 6v12l10.5-6z"/></svg></button>
+</div>
+<div class="tex" id="tex"></div>
+<div class="bw" id="bw" aria-hidden="true"><i class="fl"></i><button class="bdel" id="bdel" type="button" disabled>ลบอัลบั้ม</button><button class="bx" id="bx" aria-label="ปิด">×</button><div class="cf" id="cf"></div></div>
+<script>
+const AL=[
+{t:"Salt Atlas",a:"Marlow Kids",c1:"#1f7fa0",c2:"#b6e8f2",p:"waves",bpm:78,f:196,sc:[0,3,5,7,10],tr:["Tide Table","Low Water Radio","Salt on the Glass","Slow Harbour"]},
+{t:"Neon Lagoon",a:"Pastel Arcade",c1:"#f2a6d8",c2:"#6a4fd6",p:"circles",bpm:98,f:220,sc:[0,2,4,7,9],tr:["Pink Arcade","Lagoon Lights","Static Bloom","Last Token"]},
+{t:"Quiet Hours",a:"Ivo & the Greys",c1:"#cfcfd4",c2:"#3b3b44",p:"stripes",bpm:64,f:174.6,sc:[0,3,5,7,10],tr:["Grey Window","Half Past Three","Radiator","Hush"]},
+{t:"Glass Garden",a:"Fern Echo",c1:"#2f9a5f",c2:"#bff0d0",p:"grid",bpm:84,f:207.7,sc:[0,2,4,7,9],tr:["Greenhouse","Condensation","Moss Theory","Open Vent"]},
+{t:"Golden Hour Again",a:"Sol Marin",c1:"#f7b21f",c2:"#e8571d",p:"sun",bpm:72,f:164.8,sc:[0,2,4,7,9],tr:["Late Light","Orange Roads","Again, Slowly","Dusk Reprise"]},
+{t:"Still Blooming",a:"Sunday Lemons",c1:"#efe9da",c2:"#f2c230",p:"lemons",bpm:86,f:233.1,sc:[0,2,4,7,9],tr:["Citrus Morning","Porch Light","Slow Petals","Sunday Again"]},
+{t:"Peel Slowly",a:"Crush & Pulp",c1:"#d8d5cc",c2:"#e8704f",p:"halves",bpm:70,f:155.6,sc:[0,3,5,7,10],tr:["First Cut","Pith","Juice on the Counter","Last Segment"]},
+{t:"Brick & Signal",a:"Late Channel",c1:"#b9603f",c2:"#e8b79b",p:"blobs",bpm:90,f:185,sc:[0,3,5,7,10],tr:["Wall Tiles","Channel Zero","Antenna","Off Air"]},
+{t:"Skyward Proof",a:"Calla Verse",c1:"#78b4ea",c2:"#f6c93a",p:"bloom",bpm:104,f:246.9,sc:[0,2,4,7,9],tr:["Blue Overhead","Yellow Stems","Proof of Sky","Lift"]}
+];
+const LEN=48;let U=0;
+const hx=c=>{const n=parseInt(c.slice(1),16);return[n>>16,n>>8&255,n&255]};
+const mx=(a,b,t)=>{const x=hx(a),y=hx(b);return`rgb(${x.map((v,i)=>Math.round(v+(y[i]-v)*t)).join(",")})`};
+function fruit(cx,cy,r,rind,flesh,seg){seg=seg||9;let s=`<circle cx="${cx+3}" cy="${cy+5}" r="${r}" fill="#000" opacity=".16"/><circle cx="${cx}" cy="${cy}" r="${r}" fill="${rind}"/><circle cx="${cx}" cy="${cy}" r="${r*.84}" fill="${flesh}"/>`;
+for(let i=0;i<seg;i++){const a=i/seg*Math.PI*2;s+=`<line x1="${cx}" y1="${cy}" x2="${(cx+Math.cos(a)*r*.78).toFixed(1)}" y2="${(cy+Math.sin(a)*r*.78).toFixed(1)}" stroke="${rind}" stroke-width="${Math.max(1,r*.05).toFixed(1)}" opacity=".55"/>`}
+return s+`<circle cx="${cx}" cy="${cy}" r="${(r*.09).toFixed(1)}" fill="${rind}" opacity=".6"/>`}
+function flower(cx,cy,r,c,core){let s="";for(let i=0;i<9;i++)s+=`<ellipse cx="${cx}" cy="${(cy-r*.62).toFixed(1)}" rx="${(r*.24).toFixed(1)}" ry="${(r*.46).toFixed(1)}" fill="${c}" transform="rotate(${i*40} ${cx} ${cy})"/>`;return s+`<circle cx="${cx}" cy="${cy}" r="${(r*.3).toFixed(1)}" fill="${core}"/>`}
+function art(d){const{c1,c2,p}=d,id="k"+(++U);let s="",df=`<filter id="${id}n" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="${AL.indexOf(d)+3}"/><feColorMatrix values=".33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 0 1"/></filter>`;
+const lg=(n,a,b,x2,y2)=>`<linearGradient id="${id}${n}" x1="0" y1="0" x2="${x2||0}" y2="${y2==null?1:y2}"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
+const bg=`<rect width="210" height="210" fill="url(#${id}a)"/>`;
+if(p=="waves"){df+=lg("a",mx(c2,"#ffffff",.35),mx(c1,"#001018",.35));s+=bg+`<circle cx="150" cy="40" r="15" fill="#fff" opacity=".8"/>`;
+for(let i=0;i<10;i++){const y=58+i*16,t=i/9,w=`M0 ${y}Q26 ${y-9} 52 ${y}T104 ${y}T156 ${y}T210 ${y}`;s+=`<path d="${w}V210H0Z" fill="${mx(c2,c1,.25+t*.75)}" opacity=".78"/><path d="${w}" fill="none" stroke="#fff" stroke-width="1" opacity="${(.5-t*.35).toFixed(2)}"/>`}
+s+=`<circle cx="62" cy="128" r="6" fill="#16222a"/><path d="M50 142Q62 128 74 142Z" fill="#16222a"/>`}
+else if(p=="circles"){df+=lg("a",c1,c2,1,1);s+=bg+`<rect x="28" y="34" width="132" height="94" rx="8" fill="#fff" opacity=".16" stroke="#fff" stroke-opacity=".55" stroke-width="2"/><g fill="#fff" opacity=".9"><circle cx="76" cy="84" r="20"/><circle cx="100" cy="74" r="24"/><circle cx="126" cy="86" r="18"/><rect x="62" y="84" width="76" height="22" rx="11"/></g><circle cx="98" cy="88" r="3.5" fill="${c2}"/><circle cx="112" cy="88" r="3.5" fill="${c2}"/><line x1="176" y1="0" x2="176" y2="62" stroke="#fff" stroke-opacity=".7"/><circle cx="176" cy="72" r="14" fill="${mx(c1,"#ffffff",.55)}"/><rect y="150" width="210" height="60" fill="#2a1a52" opacity=".38"/><rect x="40" y="136" width="90" height="14" rx="7" fill="#fff" opacity=".28"/>`}
+else if(p=="stripes"){df+=lg("a","#f6f6f8",c1);s+=bg;for(let i=-2;i<8;i++)s+=`<rect x="${i*34}" y="-60" width="16" height="330" fill="#000" opacity=".07" transform="rotate(24 105 105)"/>`;
+s+=`<circle cx="118" cy="90" r="25" fill="${c2}"/><path d="M52 210Q56 140 118 130Q180 140 184 210Z" fill="${c2}"/><path d="M100 72Q118 58 138 76" stroke="#fff" stroke-opacity=".25" stroke-width="3" fill="none"/>`}
+else if(p=="grid"){df+=lg("a",mx(c1,"#ffffff",.25),mx(c1,"#06210f",.4));s+=bg;for(let r=0;r<5;r++)for(let c=0;c<5;c++)s+=`<rect x
