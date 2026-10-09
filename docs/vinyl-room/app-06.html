@@ -1,0 +1,10 @@
+>{if(bOpen){if(e.key=="Escape")closeBw();else if(e.key=="ArrowRight"||e.key=="ArrowLeft"){const n=Math.max(0,Math.min(bSl.length-1,bcur+(e.key=="ArrowRight"?1:-1)));bSl[n].scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"})}else if(e.key=="Enter"&&e.target==document.body)bPlay(bcur);return}if(e.code=="Space"&&e.target==document.body){e.preventDefault();toggle()}if(e.target==document.body){if(e.key=="ArrowRight")$("next").onclick();if(e.key=="ArrowLeft")$("prev").onclick()}});
+function loop(t){const dt=Math.min(.05,(t-last)/1e3);last=t;speed+=((playing?200:0)-speed)*Math.min(1,dt*(playing?1.6:1.1));ang=(ang+speed*dt)%360;$("spin").style.transform=`rotate(${ang}deg)`;
+const Y=mode=="yt",L=Y&&ytDur>0?ytDur:LEN;let p=Y?cpos():(playing?now():pos);if(!Y&&playing&&p>=LEN){setTrack(ti+1);p=0}if(L!=shownL){shownL=L;$("dur").textContent=fmt(L)}
+const target=playing?15+23*Math.min(1,p/L):0;armA+=(target-armA)*Math.min(1,dt*(playing?3:2.4));$("arm").style.transform=`rotate(${armA}deg)`;
+$("pg").style.width=Math.min(100,p/L*100)+"%";const s=Math.floor(p);if(s!=shown){shown=s;$("cur").textContent=fmt(s)}
+requestAnimationFrame(loop)}
+draw();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
