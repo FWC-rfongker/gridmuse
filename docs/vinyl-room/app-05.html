@@ -1,0 +1,45 @@
+
+const esc=v=>String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+function bBuild(){bItems=AL.map((d,i)=>({k:"demo",i,t:d.t,a:d.a,art:art(d),sp:d.c1,b1:lum(d.c1)>200?d.c2:d.c1,b2:d.c2,ink:lum(d.c1)>150?"#1d1d20":"#fff"})).filter(d=>!hiddenDemos.includes(d.i));
+const yi=(t,a,th,p)=>({t,a,art:`<img alt="" src="${th}">`,sp:p?p.border:"#2a2a30",b1:p?p.bg:"#2a2a30",b2:p?p.border:"#55555e",ink:"#fff"});
+if(mode=="yt"&&cur&&!album.some(a=>a.id==cur.id)){const p=cur.palette;bItems.push(Object.assign(yi(cur.title,cur.channel,cur.th,p),{k:"cur"}))}
+album.forEach((q,j)=>bItems.push(Object.assign(yi(q.title,q.channel,q.th,q.palette||albumPalette(q)),{k:"album",j})));
+$("cf").innerHTML=bItems.map((d,i)=>`<div class="sl" data-i="${i}" tabindex="0" role="button" aria-label="เล่น ${esc(d.t)} — ${esc(d.a)}"><div class="bk"><div class="bc">${d.art}</div><div class="bb"></div><div class="be"></div><div class="bs" style="background:${d.sp};color:${d.ink}"><span><b>${esc(d.t)}</b> <i>${esc(d.a)}</i></span></div></div><div class="bcap" title="${esc(d.t)}">${esc(d.t)}</div></div>`).join("");
+bSl=[...$("cf").children];bAl=bSl.map(s=>s.firstChild);bCardWidth=bSl[0]?.offsetWidth||1;bCenters=bSl.map(s=>s.offsetLeft+bCardWidth/2);bcur=-1}
+function bAlbumIndex(d){return d&&d.k=="album"?d.j:d&&d.k=="cur"?album.findIndex(a=>a.id==cur.id):-1}
+function bSel(i){bcur=i;const d=bItems[i];if(!d)return;const s=$("bw").style;s.setProperty("--b1",d.b1);s.setProperty("--b2",d.b2);$("bdel").disabled=!(d.k=="demo"||bAlbumIndex(d)>-1)}
+function bFrame(){if(!bSl.length)return;const mid=$("cf").scrollLeft+$("cf").clientWidth/2;let best=0,bd=1e9;bCenters.forEach((center,i)=>{const d=Math.abs(center-mid);if(d<bd){bd=d;best=i}});if(best!==bcur)bSel(best)}
+function openBw(){bBuild();if(!bItems.length)return;$("bw").classList.add("open");$("bw").setAttribute("aria-hidden","false");bOpen=true;
+let ci=mode=="yt"?bItems.findIndex(x=>x.k=="cur"||(x.k=="album"&&album[x.j].id==cur.id)):bItems.findIndex(x=>x.k=="demo"&&x.i==ai);if(ci<0)ci=0;requestAnimationFrame(()=>{bSl[ci].scrollIntoView({inline:"center",block:"nearest"});bFrame()})}
+function closeBw(){$("bw").classList.remove("open");$("bw").setAttribute("aria-hidden","true");bOpen=false}
+function bPlay(i){const d=bItems[i];if(!d)return;bSl[i].scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"});
+if(d.k=="demo"){audio();ac.resume();if(mode=="demo"&&d.i==ai){if(!playing)play()}else{toDemo();if(playing)stop();ai=d.i;ti=0;pos=0;draw();setTimeout(play,250)}}
+else if(d.k=="album"){if(cur&&mode=="yt")hist.push(cur);ytLoad(album[d.j])}
+else if(d.k=="cur"){if(ytReady&&!playing)yt.playVideo()}
+setTimeout(closeBw,450)}
+let bt=false;$("cf").addEventListener("scroll",()=>{const coarse=matchMedia("(pointer:coarse)").matches;$("bw").classList.add("scrolling");clearTimeout(bScrollEnd);bScrollEnd=setTimeout(()=>{$("bw").classList.remove("scrolling");bFrame()},100);if(coarse)return;if(!bt){bt=true;requestAnimationFrame(()=>{bt=false;bFrame()})}});
+$("cf").addEventListener("wheel",e=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){$("cf").scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
+$("cf").addEventListener("click",e=>{if(bmoved)return;const s=e.target.closest(".sl");if(s)bPlay(+s.dataset.i)});
+$("cf").addEventListener("keydown",e=>{if((e.key=="Enter"||e.key==" ")&&e.target.classList&&e.target.classList.contains("sl")){e.preventDefault();bPlay(+e.target.dataset.i)}});
+$("cf").addEventListener("pointerdown",e=>{if(e.pointerType!=="mouse"||e.button)return;bdrag={x:e.clientX,s:$("cf").scrollLeft};bmoved=false});
+addEventListener("pointermove",e=>{if(!bdrag)return;const dx=e.clientX-bdrag.x;if(!bmoved&&Math.abs(dx)>5){bmoved=true;$("cf").style.scrollSnapType="none"}if(bmoved)$("cf").scrollLeft=bdrag.s-dx});
+addEventListener("pointerup",()=>{if(!bdrag)return;bdrag=null;$("cf").style.scrollSnapType="";if(bmoved&&bSl[bcur])bSl[bcur].scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"});setTimeout(()=>{bmoved=false},0)});
+$("bx").onclick=closeBw;
+$("bdel").onclick=()=>{const d=bItems[bcur],j=bAlbumIndex(d);if(!d||(d.k!="demo"&&j<0))return;if(!confirm(`ลบอัลบั้ม “${d.t}” ออกจากชั้นวางหรือไม่?`))return;if(d.k=="demo"){hiddenDemos.push(d.i);saveHiddenDemos()}else{album.splice(j,1);saveAlbum();renderQ();renderR()}bBuild();if(!bItems.length){closeBw();return}const next=Math.min(bcur,bItems.length-1);requestAnimationFrame(()=>{bSl[next].scrollIntoView({inline:"center",block:"nearest"});bFrame()})};
+["sleeve","label","meta"].forEach(id=>$(id).addEventListener("click",openBw));
+addEventListener("resize",()=>{if(bOpen)bFrame()});
+$("sbtn").onclick=()=>{$("dr").classList.add("open");$("q").focus()};$("dx").onclick=()=>$("dr").classList.remove("open");
+$("key").value=ls.get("vr.key")||DEFAULT_API_KEY;if($("key").value)$("keybox").querySelector("a").textContent="เปลี่ยน API key";
+$("ksave").onclick=()=>{ls.set("vr.key",$("key").value.trim().replace(/^["']|["']$/g,""));{const k=ls.get("vr.key");msg(k.length==39&&k.startsWith("AIza")?"บันทึก key แล้ว ลองพิมพ์ชื่อเพลงแล้วกดค้นหา":"บันทึกแล้ว แต่ key ดูไม่ถูกต้อง (ปกติขึ้นต้นด้วย AIza และยาว 39 ตัว ตอนนี้ยาว "+k.length+" ตัว) ตรวจว่าคัดลอกครบ")}};
+const go=()=>{msg("กำลังค้นหา…");try{search($("q").value).catch(e=>msg("เกิดข้อผิดพลาด: "+e.message))}catch(e){msg("เกิดข้อผิดพลาด: "+e.message)}};
+$("sgo").addEventListener("click",go);$("q").addEventListener("keydown",e=>{if(e.key=="Enter"&&!e.isComposing){e.preventDefault();go()}});
+$("dr").addEventListener("click",e=>{const b=e.target.closest("button[data-a]");if(!b)return;const i=+b.dataset.i,a=b.dataset.a;
+if(a=="play"){const t=results[i];if(!t)return;if(cur&&mode=="yt")hist.push(cur);ytLoad(t);return}
+if(a=="add"){const t=results[i];if(!t)return;if(inAlbum(t)){msg("เพลงนี้อยู่ในอัลบั้มแล้ว");return}if(!confirm(`เพิ่มเพลง “${t.title}” เข้าอัลบั้มของฉันหรือไม่?`))return;const added={...t,palette:albumPalette(t)};album.push(added);saveAlbum();renderQ();renderR();sampleAlbumPalette(added).then(p=>{const a=album.find(a=>a.id==added.id);if(a){a.palette=p;saveAlbum();renderQ()}});return}
+if(a=="aplay"){const t=album[i];if(!t)return;if(cur&&mode=="yt")hist.push(cur);ytLoad(t);return}
+if(a=="adel"){album.splice(i,1);saveAlbum();renderQ();renderR()}});
+try{queue=JSON.parse(ls.get("vr.queue")||"[]")}catch(e){queue=[]}try{album=JSON.parse(ls.get("vr.album")||"[]")}catch(e){album=[]}try{hiddenDemos=JSON.parse(ls.get("vr.hiddenDemos")||"[]")}catch(e){hiddenDemos=[]}renderQ();album.forEach(t=>sampleAlbumPalette(t).then(p=>{t.palette=p;saveAlbum();renderQ()}));
+$("play").onclick=$("base").onclick=$("arm").onclick=toggle;
+$("next").onclick=()=>mode=="yt"?qnext():setTrack(ti+1);$("prev").onclick=()=>mode=="yt"?qprev():setTrack(now()>4?ti:ti-1);
+$("pbar").onclick=e=>{const r=$("pbar").getBoundingClientRect();const f=Math.max(0,Math.min(.99,(e.clientX-r.left)/r.width));if(mode=="yt"){if(ytReady&&ytDur)yt.seekTo(f*ytDur,true);return}pos=f*LEN;if(playing)resync()};
+addEventListener("keydown",e=
